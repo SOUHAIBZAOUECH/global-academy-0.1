@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BIS Shop">
+<link rel="manifest" href="manifest.json">
+<title>B.I.S Shop</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#172033;--muted:#64748b;--primary:#0f172a;--ok:#15803d;--warn:#d97706;--danger:#dc2626;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}button,input,select{font:inherit}
+header{background:var(--primary);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10}header h1{margin:0;font-size:21px}header small{opacity:.75}
+nav{position:sticky;top:61px;z-index:9;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:7px;padding:8px;overflow:auto}nav button{border:0;background:#eef2f7;color:#334155;padding:10px 13px;border-radius:10px;font-weight:700;white-space:nowrap}nav button.active{background:var(--primary);color:#fff}
+main{max-width:1100px;margin:auto;padding:12px}.page{display:none}.page.active{display:block}.box{background:var(--card);border-radius:15px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0000000a}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px #0000000a}.card b{display:block;font-size:20px;margin-top:7px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;margin:4px 0 10px}label{font-size:13px;font-weight:700}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:var(--primary);color:#fff}.secondary{background:#e2e8f0;color:#172033}.danger{background:var(--danger);color:#fff}.success{background:var(--ok);color:#fff}.warning{background:#f59e0b;color:#111827}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:750px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:right}th{background:#f8fafc}.low{background:#fff7ed}.out{background:#fee2e2}
+.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#dcfce7}.pill.warn{background:#ffedd5}.pill.out{background:#fee2e2}
+.total{font-size:25px;font-weight:800}.muted{color:var(--muted)}.empty{padding:25px;text-align:center;color:var(--muted)}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;padding:15px;overflow:auto}.modal>div{background:#fff;max-width:560px;margin:20px auto;border-radius:16px;padding:18px}.modal h2{margin-top:0}
+#camera{width:100%;max-height:380px;background:#000;border-radius:14px;display:none;object-fit:cover}.scanbox{position:relative}.scanline{position:absolute;left:8%;right:8%;top:50%;border-top:2px solid #22c55e;display:none}
+.cartitem{display:grid;grid-template-columns:1fr 100px 110px 45px;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 17px;border-radius:12px;display:none;z-index:100}
+#labelPrint{display:none}
+@media(max-width:700px){.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.cartitem{grid-template-columns:1fr 75px 90px 38px}.hideMob{display:none}}
+@media print{
+body>*{display:none!important}#labelPrint{display:grid!important;grid-template-columns:repeat(3,1fr);gap:5mm;padding:5mm}
+.label{width:58mm;min-height:32mm;border:1px solid #000;padding:3mm;text-align:center;break-inside:avoid;font-family:Arial,sans-serif}.label .name{font-weight:bold;font-size:11pt}.label svg{width:52mm;height:16mm;display:block;margin:2mm auto}.label .price{font-weight:bold;font-size:13pt}.label .code{font-size:7pt;letter-spacing:1px}
+}
+</style>
+</head>
+<body>
+<header><h1>🛒 B.I.S Shop</h1><small>المخزون • البيع • الأرباح • Barcode</small></header>
+<nav id="nav">
+<button class="active" data-page="home">🏠 الرئيسية</button><button data-page="products">📦 المخزون</button><button data-page="sale">🛒 البيع</button><button data-page="buy">➕ شراء</button><button data-page="labels">🏷️ الملصقات</button><button data-page="reports">📊 التقارير</button><button data-page="settings">⚙️</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<div class="cards"><div class="card">المنتجات<b id="dashProducts">0</b></div><div class="card">مبيعات اليوم<b id="dashSales">0.000 د.ت</b></div><div class="card">ربح اليوم<b id="dashProfit">0.000 د.ت</b></div><div class="card">ناقص/نافد<b id="dashLow">0</b></div></div>
+<div class="box"><h3>⚠️ المخزون</h3><div id="alerts"></div></div>
+<div class="box"><h3>🧾 آخر المبيعات</h3><div id="recentSales"></div></div>
+</section>
+
+<section id="products" class="page">
+<div class="box"><div class="row"><input id="productSearch" placeholder="بحث بالاسم أو Barcode"><button class="primary" onclick="newProduct()">➕ منتج</button><button class="secondary" onclick="scanTo('product')">📷 مسح</button></div></div>
+<div class="box"><div class="tablewrap"><table><thead><tr><th>المنتج</th><th>Barcode</th><th>شراء</th><th>بيع</th><th>الكمية</th><th>الربح</th><th>الحالة</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div></div>
+</section>
+
+<section id="sale" class="page">
+<div class="box"><h2>🛒 البيع</h2><div class="row"><input id="saleSearch" placeholder="امسح أو اكتب اسم/Barcode"><button class="secondary" onclick="scanTo('sale')">📷 مسح بالكاميرا</button><button class="primary" onclick="addCart()">إضافة</button></div><div id="cart"></div><hr><div class="row"><span>الإجمالي</span><strong id="cartTotal" class="total">0.000 د.ت</strong></div><button class="success" onclick="completeSale()">✓ تأكيد البيع</button></div>
+</section>
+
+<section id="buy" class="page">
+<div class="box"><h2>➕ شراء / زيادة المخزون</h2><div class="row"><input id="buySearch" placeholder="اسم أو Barcode"><button class="secondary" onclick="scanTo('buy')">📷 مسح</button></div><button class="primary" onclick="increaseStock()">إضافة كمية</button><p class="muted">لشراء منتج جديد استخدم «➕ منتج» من المخزون.</p></div>
+</section>
+
+<section id="labels" class="page">
+<div class="box"><h2>🏷️ طباعة ملصقات</h2><p class="muted">حدد المنتجات واكتب عدد الملصقات المطلوبة.</p><div id="labelOptions"></div><button class="primary" onclick="printSelectedLabels()">🖨️ طباعة الملصقات</button></div>
+</section>
+
+<section id="reports" class="page">
+<div class="cards"><div class="card">كل المبيعات<b id="repSales">0</b></div><div class="card">تكلفة البضاعة<b id="repCost">0</b></div><div class="card">إجمالي الربح<b id="repProfit">0</b></div><div class="card">عمليات البيع<b id="repOps">0</b></div></div>
+<div class="box"><h3>أرباح المنتجات المباعة</h3><div class="tablewrap"><table><thead><tr><th>المنتج</th><th>الكمية</th><th>المبيعات</th><th>التكلفة</th><th>الربح</th></tr></thead><tbody id="profitRows"></tbody></table></div></div>
+</section>
+
+<section id="settings" class="page">
+<div class="box"><h2>⚙️ البيانات</h2><button class="primary" onclick="exportData()">💾 نسخ احتياطي</button><label style="display:inline-block;background:#e2e8f0;padding:11px 14px;border-radius:10px;margin:4px;cursor:pointer">📥 استرجاع نسخة<input type="file" id="importFile" accept=".json" hidden></label><button class="danger" onclick="clearAll()">حذف كل البيانات</button><p class="muted">البيانات محفوظة محليًا على الهاتف. احتفظ بنسخة احتياطية دورية.</p></div>
+</section>
+</main>
+
+<div class="modal" id="productModal"><div><h2 id="productModalTitle">منتج جديد</h2>
+<label>اسم المنتج</label><input id="fName">
+<label>Barcode — اتركه فارغًا لإنشاء كود B.I.S تلقائيًا</label><input id="fBarcode">
+<div class="grid"><div><label>سعر الشراء (د.ت)</label><input id="fBuy" type="number" step=".001"></div><div><label>سعر البيع (د.ت)</label><input id="fSell" type="number" step=".001"></div></div>
+<div class="grid"><div><label>الكمية</label><input id="fQty" type="number" step=".001"></div><div><label>حد التنبيه</label><input id="fMin" type="number" step=".001" value="2"></div></div>
+<div class="row"><button class="primary" onclick="saveProduct()">حفظ</button><button class="secondary" onclick="closeModal()">إلغاء</button></div></div></div>
+
+<div class="modal" id="scannerModal"><div><h2>📷 مسح Barcode</h2><div class="scanbox"><video id="camera" playsinline></video><div class="scanline" id="scanline"></div></div><p id="scanStatus" class="muted">وجّه الكاميرا نحو الكود...</p><button class="danger" onclick="closeScanner()">إغلاق</button></div></div>
+<div class="toast" id="toast"></div>
+<div id="labelPrint"></div>
+
+<script>
+const DBKEY='BIS_SHOP_COMPLETE_1';
+let db=JSON.parse(localStorage.getItem(DBKEY)||'{"products":[],"sales":[]}');
+let editId=null,cart=[],scanPurpose=null,stream=null,detector=null,scanTimer=null;
+
+const $=id=>document.getElementById(id);
+const money=n=>(Number(n)||0).toFixed(3)+' د.ت';
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));renderAll()}
+function toast(t){$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function genCode(){let n=db.products.length+1;let c;do{c='BIS'+String(n++).padStart(7,'0')}while(db.products.some(p=>p.barcode===c));return c}
+function productByInput(v){v=String(v||'').trim().toLowerCase();return db.products.find(p=>p.barcode.toLowerCase()===v)||db.products.find(p=>p.name.toLowerCase().includes(v))}
+function todaySales(){let d=new Date().toISOString().slice(0,10);return db.sales.filter(s=>s.date.slice(0,10)===d)}
+
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(b.dataset.page).classList.add('active');document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderAll()});
+
+function renderAll(){renderDash();renderProducts();renderCart();renderLabels();renderReports()}
+function renderDash(){let s=todaySales(),sales=s.reduce((a,x)=>a+x.total,0),profit=s.reduce((a,x)=>a+x.profit,0),low=db.products.filter(p=>Number(p.qty)<=Number(p.min));$('dashProducts').textContent=db.products.length;$('dashSales').textContent=money(sales);$('dashProfit').textContent=money(profit);$('dashLow').textContent=low.length;
+$('alerts').innerHTML=low.length?low.map(p=>`<div class="box ${p.qty<=0?'out':'low'}"><b>${esc(p.name)}</b> — ${p.qty<=0?'نافد':`المتبقي ${p.qty} (حد التنبيه ${p.min})`}</div>`).join(''):'<div class="empty">المخزون جيد ولا توجد تنبيهات.</div>';
+$('recentSales').innerHTML=db.sales.slice(-8).reverse().map(s=>`<div class="row" style="border-bottom:1px solid var(--line);padding:8px"><span>${new Date(s.date).toLocaleString('ar-TN')}</span><b>${money(s.total)}</b><span>ربح ${money(s.profit)}</span></div>`).join('')||'<div class="empty">لا توجد مبيعات.</div>'}
+function renderProducts(){let q=($('productSearch')?.value||'').toLowerCase();let ps=db.products.filter(p=>(p.name+' '+p.barcode).toLowerCase().includes(q));$('productRows').innerHTML=ps.map(p=>`<tr class="${p.qty<=0?'out':p.qty<=p.min?'low':''}"><td><b>${esc(p.name)}</b></td><td>${p.barcode}</td><td>${money(p.buy)}</td><td>${money(p.sell)}</td><td>${p.qty}</td><td>${money(p.sell-p.buy)}</td><td>${p.qty<=0?'<span class="pill out">نافد</span>':p.qty<=p.min?'<span class="pill warn">منخفض</span>':'<span class="pill">جيد</span>'}</td><td><button class="secondary" onclick="editProduct('${p.id}')">تعديل</button></td></tr>`).join('')||'<tr><td colspan="8" class="empty">لا توجد منتجات.</td></tr>'}
+function newProduct(){editId=null;$('productModalTitle').textContent='منتج جديد';$('fName').value='';$('fBarcode').value='';$('fBuy').value='';$('fSell').value='';$('fQty').value='0';$('fMin').value='2';$('productModal').style.display='block'}
+function editProduct(id){let p=db.products.find(x=>x.id===id);if(!p)return;editId=id;$('productModalTitle').textContent='تعديل المنتج';$('fName').value=p.name;$('fBarcode').value=p.barcode;$('fBuy').value=p.buy;$('fSell').value=p.sell;$('fQty').value=p.qty;$('fMin').value=p.min;$('productModal').style.display='block'}
+function closeModal(){$('productModal').style.display='none'}
+function saveProduct(){let name=$('fName').value.trim();if(!name)return toast('أدخل اسم المنتج');let barcode=$('fBarcode').value.trim()||genCode();if(db.products.some(p=>p.barcode===barcode&&p.id!==editId))return toast('Barcode موجود بالفعل');let p=editId?db.products.find(x=>x.id===editId):null;let data={name,barcode,buy:Number($('fBuy').value)||0,sell:Number($('fSell').value)||0,qty:Number($('fQty').value)||0,min:Number($('fMin').value)||0};if(p)Object.assign(p,data);else db.products.push({id:crypto.randomUUID(),...data});closeModal();persist();toast('تم حفظ المنتج')}
+function renderCart(){let total=0;$('cart').innerHTML=cart.map((x,i)=>{let p=db.products.find(p=>p.id===x.id);if(!p)return '';let t=p.sell*x.qty;total+=t;return `<div class="cartitem"><div><b>${esc(p.name)}</b><br><small>${p.barcode}</small></div><input type="number" min="0.001" step=".001" value="${x.qty}" onchange="cart[${i}].qty=Number(this.value);renderCart()"><b>${money(t)}</b><button class="danger" onclick="cart.splice(${i},1);renderCart()">×</button></div>`}).join('')||'<div class="empty">السلة فارغة.</div>';$('cartTotal').textContent=money(total)}
+function addCart(){let p=productByInput($('saleSearch').value);if(!p)return toast('المنتج غير موجود');let x=cart.find(x=>x.id===p.id);if(x)x.qty+=1;else cart.push({id:p.id,qty:1});$('saleSearch').value='';renderCart()}
+function completeSale(){if(!cart.length)return toast('السلة فارغة');for(let x of cart){let p=db.products.find(p=>p.id===x.id);if(!p||p.qty<x.qty)return toast('الكمية غير كافية: '+(p?.name||''))}let total=0,cost=0;let items=cart.map(x=>{let p=db.products.find(p=>p.id===x.id);p.qty-=x.qty;total+=p.sell*x.qty;cost+=p.buy*x.qty;return {productId:p.id,name:p.name,qty:x.qty,sell:p.sell,buy:p.buy}});db.sales.push({id:crypto.randomUUID(),date:new Date().toISOString(),items,total,cost,profit:total-cost});cart=[];persist();toast('تم تسجيل البيع')}
+function increaseStock(){let p=productByInput($('buySearch').value);if(!p)return toast('المنتج غير موجود');let q=prompt('كمية الزيادة؟','1');q=Number(q);if(!(q>0))return;p.qty+=q;$('buySearch').value='';persist();toast('تمت زيادة المخزون')}
+function renderLabels(){$('labelOptions').innerHTML=db.products.map(p=>`<div class="row" style="padding:8px;border-bottom:1px solid var(--line)"><label style="flex:3"><input type="checkbox" class="labelPick" value="${p.id}"> ${esc(p.name)} <small>(${p.barcode})</small></label><input class="labelQty" data-id="${p.id}" type="number" min="1" value="1" style="max-width:85px"></div>`).join('')||'<div class="empty">أضف منتجات أولًا.</div>'}
+function renderReports(){let total=db.sales.reduce((a,s)=>a+s.total,0),cost=db.sales.reduce((a,s)=>a+s.cost,0),profit=db.sales.reduce((a,s)=>a+s.profit,0);$('repSales').textContent=money(total);$('repCost').textContent=money(cost);$('repProfit').textContent=money(profit);$('repOps').textContent=db.sales.length;let m={};db.sales.forEach(s=>s.items.forEach(i=>{let x=m[i.productId]||(m[i.productId]={name:i.name,qty:0,sales:0,cost:0});x.qty+=i.qty;x.sales+=i.sell*i.qty;x.cost+=i.buy*i.qty}));$('profitRows').innerHTML=Object.values(m).map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.sales)}</td><td>${money(x.cost)}</td><td>${money(x.sales-x.cost)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد مبيعات.</td></tr>'}
+
+function code128Svg(text){ // Code 128-B minimal encoder
+const patterns=["11011001100","11001101100","11001100110","10010011000","10010001100","10001001100","10011001000","10011000100","10001100100","11001001000","11001000100","11000100100","10110011100","10011011100","10011001110","10111001100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101001100","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101001100","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10110011100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101011000","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110111000","10110111000","1100011101011"];
+let vals=[104];for(let c of text){let v=c.charCodeAt(0)-32;if(v<0||v>95)v=0;vals.push(v)}let sum=104;for(let i=1;i<vals.length;i++)sum+=vals[i]*i;vals.push(sum%103);vals.push(106);let bits=vals.map(v=>patterns[v]||patterns[0]).join('');let w=1,h=48;let bars='';for(let i=0;i<bits.length;i++)if(bits[i]=='1')bars+=`<rect x="${i*w}" y="0" width="${w}" height="${h}"/>`;return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${bits.length*w} ${h}" preserveAspectRatio="none">${bars}</svg>`}
+function printSelectedLabels(){let ids=[...document.querySelectorAll('.labelPick:checked')].map(x=>x.value);if(!ids.length)return toast('اختر منتجًا واحدًا على الأقل');let area=$('labelPrint');area.innerHTML='';ids.forEach(id=>{let p=db.products.find(x=>x.id===id),n=Number(document.querySelector(`.labelQty[data-id="${id}"]`).value)||1;for(let i=0;i<n;i++)area.innerHTML+=`<div class="label"><div class="name">${esc(p.name)}</div>${code128Svg(p.barcode)}<div class="code">${esc(p.barcode)}</div><div class="price">${money(p.sell)}</div></div>`});window.print()}
+
+async function scanTo(purpose){scanPurpose=purpose;$('scannerModal').style.display='block';$('camera').style.display='block';$('scanline').style.display='block';try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('no camera');stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('camera').srcObject=stream;await $('camera').play();if(!('BarcodeDetector' in window)){ $('scanStatus').textContent='هذا المتصفح لا يوفر BarcodeDetector. استخدم Chrome حديثًا أو أدخل الكود يدويًا.';return }detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','codabar']});scanLoop()}catch(e){$('scanStatus').textContent='تعذر تشغيل الكاميرا. اسمح بالوصول للكاميرا وتأكد أن الصفحة تعمل عبر HTTPS.'}}
+async function scanLoop(){if(!$('scannerModal').style.display||$('scannerModal').style.display==='none')return;try{let a=await detector.detect($('camera'));if(a.length){handleScan(a[0].rawValue);return}}catch(e){}scanTimer=requestAnimationFrame(scanLoop)}
+function handleScan(code){closeScanner();if(scanPurpose==='sale'){$('saleSearch').value=code;addCart()}else if(scanPurpose==='buy'){$('buySearch').value=code;increaseStock()}else if(scanPurpose==='product'){$('fBarcode').value=code;newProduct();$('fBarcode').value=code}}
+function closeScanner(){if(scanTimer)cancelAnimationFrame(scanTimer);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('camera').srcObject=null;$('scannerModal').style.display='none'}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='BIS-Shop-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);toast('تم إنشاء النسخة الاحتياطية')}
+$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.products||!x.sales)throw 0;db=x;persist();toast('تم استرجاع البيانات')}catch{toast('ملف النسخة غير صالح')}};r.readAsText(f)}
+function clearAll(){if(confirm('سيتم حذف كل المنتجات والمبيعات. هل أنت متأكد؟')){db={products:[],sales:[]};cart=[];persist();toast('تم حذف البيانات')}}
+$('productSearch').oninput=renderProducts;
+$('saleSearch').onkeydown=e=>{if(e.key==='Enter')addCart()};
+$('buySearch').onkeydown=e=>{if(e.key==='Enter')increaseStock()};
+renderAll();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
